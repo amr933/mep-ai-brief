@@ -431,43 +431,139 @@ def build_telegram_message(issue, news):
 CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
 
+:root {
+  --bg: #f0f4f7;
+  --card: #ffffff;
+  --ink: #17222e;
+  --muted: #5d6f7f;
+  --brand: #0e4d64;
+  --brand2: #1b7a9e;
+  --accent: #e4b04a;
+  --line: #dde7ee;
+  --soft: #eef6f9;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 body {
   font-family: 'Cairo', 'Segoe UI', 'Tahoma', sans-serif;
-  background: #f4f6f8;
-  color: #1a202c;
+  background: var(--bg);
+  color: var(--ink);
   direction: rtl;
-  line-height: 1.8;
+  line-height: 1.85;
 }
-.wrap { max-width: 820px; margin: 0 auto; padding: 24px 16px 80px; }
-header {
-  background: linear-gradient(135deg, #0f4c5c 0%, #2a6f97 100%);
-  color: #fff; border-radius: 16px; padding: 28px 24px; margin-bottom: 24px;
-  box-shadow: 0 6px 24px rgba(15,76,92,.18);
+
+.hero {
+  background: linear-gradient(135deg, #09344a 0%, #0e4d64 55%, #1b7a9e 100%);
+  color: #fff;
+  padding: 40px 20px 34px;
+  border-bottom: 5px solid var(--accent);
 }
-header h1 { font-size: 26px; margin-bottom: 6px; }
-header .sub { opacity: .9; font-size: 14px; }
-header .issue { display: inline-block; margin-top: 12px; background: rgba(255,255,255,.16);
-  padding: 4px 14px; border-radius: 999px; font-size: 13px; }
-header .links { margin-top: 14px; font-size: 13px; opacity: .95; }
-header .links a { color: #fff; text-decoration: underline; }
-.intro { background: #fff; border-radius: 12px; padding: 16px 18px; margin-bottom: 22px;
-  color: #4a5568; font-size: 15px; border: 1px solid #e2e8f0; }
-section { margin-bottom: 30px; }
-section h2 { font-size: 20px; margin-bottom: 12px; padding-bottom: 8px;
-  border-bottom: 3px solid #0f4c5c; display: inline-block; }
-.card { background: #fff; border-radius: 12px; padding: 18px 20px; margin-bottom: 14px;
-  border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
-.card h3 { font-size: 17px; margin-bottom: 8px; color: #0f4c5c; }
-.card p { font-size: 15px; color: #2d3748; margin-bottom: 10px; }
-.why { background: #ebf8ff; border-right: 4px solid #2a6f97; border-radius: 8px;
-  padding: 10px 14px; font-size: 14px; color: #2c5282; margin-bottom: 10px; }
-.source { font-size: 13px; }
-.source a { color: #2a6f97; text-decoration: none; }
+.hero-in { max-width: 820px; margin: 0 auto; }
+.hero .brandline {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 15px; letter-spacing: 1px; opacity: .95; font-weight: 700;
+}
+.hero .brandline .dot {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 12px rgba(228,176,74,.9);
+}
+.hero h1 { font-size: 30px; margin: 10px 0 6px; font-weight: 900; }
+.hero .sub { opacity: .92; font-size: 15px; max-width: 640px; }
+.hero .chips { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+.hero .chip {
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.28);
+  padding: 5px 14px; border-radius: 999px; font-size: 13px;
+}
+.hero .issue-line { margin-top: 18px; font-size: 14px; opacity: .85; }
+.hero .issue-line b { color: var(--accent); font-size: 16px; }
+
+.wrap { max-width: 820px; margin: 0 auto; padding: 26px 16px 70px; }
+
+.intro {
+  background: linear-gradient(180deg, #ffffff, #f2f8fb);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 26px;
+  color: var(--muted);
+  font-size: 15px;
+  box-shadow: 0 2px 10px rgba(14,77,100,.05);
+}
+.intro b { color: var(--brand); }
+
+section { margin-bottom: 34px; }
+.sec-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+.sec-head .ico {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: var(--soft); border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.sec-head h2 { font-size: 20px; color: var(--brand); font-weight: 800; }
+.sec-head .rule { flex: 1; height: 2px; background: linear-gradient(90deg, var(--brand2), transparent); }
+
+.card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  box-shadow: 0 3px 12px rgba(23,34,46,.05);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(14,77,100,.12); }
+.card h3 { font-size: 17px; margin-bottom: 9px; color: var(--brand); line-height: 1.6; }
+.card p { font-size: 15px; color: #26384a; margin-bottom: 12px; }
+.why {
+  background: var(--soft);
+  border-right: 4px solid var(--brand2);
+  border-radius: 10px;
+  padding: 11px 15px;
+  font-size: 14px;
+  color: #24536b;
+  margin-bottom: 12px;
+}
+.why b { color: var(--brand); }
+.source { font-size: 13px; display: flex; align-items: center; gap: 7px; }
+.source svg { flex: 0 0 auto; }
+.source a { color: var(--brand2); text-decoration: none; font-weight: 600; }
 .source a:hover { text-decoration: underline; }
-footer { text-align: center; color: #718096; font-size: 13px; margin-top: 40px; }
-footer a { color: #2a6f97; }
-@media (max-width: 640px) { header h1 { font-size: 21px; } .card { padding: 14px; } }
+
+.archive-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.archive-list a {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  transition: .15s ease;
+}
+.archive-list a:hover { border-color: var(--brand2); color: var(--brand); }
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 46px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+footer a { color: var(--brand2); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+footer .fbrand { color: var(--brand); font-weight: 800; }
+
+@media (max-width: 640px) {
+  .hero h1 { font-size: 23px; }
+  .card { padding: 16px; }
+  .archive-list { grid-template-columns: 1fr; }
+}
 """
 
 GC_SNIPPET = """
@@ -494,17 +590,27 @@ def build_web_page(issue, news, archive_links=None):
         gc = GC_SNIPPET.replace("{code}", GOATCOUNTER_CODE)
         parts.insert(-1, gc)
     parts.append("<body>")
+
+    # ---- hero band (full-width, outside .wrap)
+    parts.append('<div class="hero">')
+    parts.append('<div class="hero-in">')
+    parts.append('<div class="brandline"><span class="dot"></span>MEP NEWSLETTER</div>')
+    parts.append("<h1>الذكاء الاصطناعي في هندسة الـ MEP</h1>")
+    parts.append('<div class="sub">ملخص يومي لأحدث الأخبار والتطبيقات في التكييف والتهوية ومكافحة الحريق والأعمال الصحية والغازات الطبية — مُحرَّر هندسياً باللغة العربية.</div>')
+    parts.append('<div class="chips">')
+    parts.append('<span class="chip">❄️ التكييف</span>')
+    parts.append('<span class="chip">🔥 الحريق</span>')
+    parts.append('<span class="chip">🚰 الصحي</span>')
+    parts.append('<span class="chip">🏥 الغازات الطبية</span>')
+    parts.append('</div>')
+    parts.append(f'<div class="issue-line">العدد <b>{issue}</b> • {date_str} — يصلك كل صباح الساعة 8 بتوقيت مصر</div>')
+    parts.append('</div>')
+    parts.append('</div>')
+
     parts.append('<div class="wrap">')
 
-    parts.append("<header>")
-    parts.append("<h1>📡 MEP Newsletter</h1>")
-    parts.append('<div class="sub">ملخص يومي لتطبيقات الذكاء الاصطناعي في هندسة التكييف ومكافحة الحريق والأعمال الصحية والغازات الطبية</div>')
-    parts.append(f'<span class="issue">العدد {issue} • {date_str}</span>')
-    parts.append("</header>")
-
     parts.append('<div class="intro">')
-    parts.append("هذه النشرة اليومية تقدم لك ملخصاً هندسياً محترفاً لأحدث تطبيقات الذكاء الاصطناعي ")
-    parts.append("في مجالات الـ MEP، مع ذكر المصادر الأصلية لكل خبر للتعمق والرجوع إليها.")
+    parts.append("<b>لماذا هذه النشرة؟</b> لأن المهندس لا يجد وقتاً لمتابعة عشرات المصادر يومياً. نختار لك الأهم، نلخصه بدقة هندسية، ونذكر مع كل خبر مصدره الأصلي — خلال أقل من 3 دقائق.")
     parts.append("</div>")
 
     for key, label, _ in SECTIONS:
@@ -512,7 +618,11 @@ def build_web_page(issue, news, archive_links=None):
         if not section_items:
             continue
         parts.append("<section>")
-        parts.append(f"<h2>{label}</h2>")
+        parts.append('<div class="sec-head">')
+        parts.append(f'<div class="ico">{label[0]}</div>')
+        parts.append(f"<h2>{label[1:].strip()}</h2>")
+        parts.append('<div class="rule"></div>')
+        parts.append('</div>')
         for n in section_items:
             title = esc_html(n.get("العنوان", "بدون عنوان"))
             summary = esc_html(n.get("الملخص", ""))
@@ -528,22 +638,30 @@ def build_web_page(issue, news, archive_links=None):
             if summary:
                 parts.append(f"<p>{summary}</p>")
             if why:
-                parts.append(f'<div class="why">💡 <strong>لماذا يهمك:</strong> {why}</div>')
+                parts.append(f'<div class="why">💡 <b>لماذا يهمك:</b> {why}</div>')
             if link:
-                parts.append(f'<div class="source">🔗 المصدر: <a href="{esc_html(link)}">{esc_html(source or link)}</a></div>')
+                link_icon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1b7a9e" stroke-width="2.2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7"/></svg>'
+                parts.append(f'<div class="source">{link_icon}<a href="{esc_html(link)}" target="_blank" rel="noopener">{esc_html(source or link)}</a></div>')
             parts.append("</div>")
         parts.append("</section>")
 
     if archive_links:
         parts.append("<section>")
-        parts.append("<h2>📚 الأرشيف</h2>")
-        for a in archive_links[:10]:
-            parts.append(f'<div class="card"><a href="{esc_html(a["url"])}">{esc_html(a["label"])}</a></div>')
+        parts.append('<div class="sec-head">')
+        parts.append('<div class="ico">📚</div>')
+        parts.append("<h2>الأرشيف</h2>")
+        parts.append('<div class="rule"></div>')
+        parts.append('</div>')
+        parts.append('<div class="archive-list">')
+        for a in archive_links[:12]:
+            parts.append(f'<a href="{esc_html(a["url"])}">{esc_html(a["label"])}</a>')
+        parts.append('</div>')
         parts.append("</section>")
 
     parts.append("<footer>")
-    parts.append("MEP Newsletter — نشرة هندسية يومية | ")
-    parts.append('<a href="https://github.com/amr933/mep-ai-brief">المشروع على GitHub</a>')
+    parts.append('<div class="fbrand">MEP Newsletter</div>')
+    parts.append("<div>نشرة هندسية يومية — تصلك كل صباح الساعة 8 بتوقيت مصر</div>")
+    parts.append('<div style="margin-top:8px"><a href="https://github.com/amr933/mep-ai-brief">المشروع على GitHub</a></div>')
     parts.append("</footer>")
 
     parts.append("</div>")
@@ -553,25 +671,31 @@ def build_web_page(issue, news, archive_links=None):
     return "\n".join(parts)
 
 
-ARCHIVE_INDEX = os.path.join(SITE_DIR, "archive_index.json")
-
-
 def save_web_edition(issue, news):
-    """Write site/index.html + archive page + update archive index."""
+    """Write site/index.html + archive page + update archive index.
+
+    The current issue always overwrites index.html. Archive pages are keyed by
+    date AND issue number, and the archive list is rebuilt from the files on
+    disk so the index can never drift from what actually exists.
+    """
     os.makedirs(SITE_DIR, exist_ok=True)
     os.makedirs(ARCHIVE_DIR, exist_ok=True)
 
     today = datetime.now(timezone(timedelta(hours=3)))
     date_str = today.strftime("%Y-%m-%d")
 
-    # archive links
+    # rebuild archive links from the files that actually exist on disk
     archive_links = []
-    if os.path.exists(ARCHIVE_INDEX):
-        try:
-            with open(ARCHIVE_INDEX, encoding="utf-8") as f:
-                archive_links = json.load(f)
-        except Exception:
-            archive_links = []
+    for fname in sorted(os.listdir(ARCHIVE_DIR), reverse=True):
+        if not fname.endswith(".html"):
+            continue
+        base = fname[:-5]  # strip .html
+        if "__" in base:
+            d, num = base.split("__", 1)
+            label = f"العدد {int(num)} — {d}"
+        else:
+            label = base
+        archive_links.append({"label": label, "url": f"archive/{fname}"})
 
     html = build_web_page(issue, news, archive_links)
     index_path = os.path.join(SITE_DIR, "index.html")
@@ -579,19 +703,15 @@ def save_web_edition(issue, news):
         f.write(html)
     print(f"[mep] web edition written: {index_path}")
 
-    # archive copy
+    # archive copy: date + issue number. Re-running the same issue on the same
+    # day just regenerates the same file — no duplicates, no collisions.
     safe_date = re.sub(r"[^\d-]", "", date_str)
-    archive_path = os.path.join(ARCHIVE_DIR, f"{safe_date}.html")
+    archive_name = f"{safe_date}__{issue:02d}.html"
+    archive_path = os.path.join(ARCHIVE_DIR, archive_name)
     with open(archive_path, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"[mep] archive copy: {archive_path}")
 
-    # update archive index (newest first), absolute from site root
-    entry = {"label": f"العدد {issue} — {date_str}", "url": f"archive/{safe_date}.html"}
-    archive_links.insert(0, entry)
-    archive_links = archive_links[:60]
-    with open(ARCHIVE_INDEX, "w", encoding="utf-8") as f:
-        json.dump(archive_links, f, ensure_ascii=False, indent=1)
     return index_path
 
 
