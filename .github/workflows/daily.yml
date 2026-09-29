@@ -9,6 +9,8 @@ on:
 # Let the workflow commit the generated pages back to the repo
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   publish:
@@ -33,6 +35,14 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           MEP_LLM_API_KEY: ${{ secrets.MEP_LLM_API_KEY }}
         run: python scripts/generate_newsletter.py
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
 
       - name: Commit and push web edition
         run: |
