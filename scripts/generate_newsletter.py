@@ -34,6 +34,10 @@ def _load_env_key(name):
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN") or "8811437259:AAEkfiT-v3alMzM4H5jL_er9tGsU26wruOM"
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID") or "7758983309"
+# Web edition URL (used for analytics + "read full issue" link). Set via env/secret.
+WEB_URL = os.getenv("MEP_WEB_URL", "https://amr933.github.io/mep-ai-brief/").rstrip("/")
+# GoatCounter analytics code (e.g. "my-site" for my-site.goatcounter.com). Empty = no tracking.
+GOATCOUNTER_CODE = os.getenv("GOATCOUNTER_CODE", "")
 LLM_API_KEY = _load_env_key("HERMES_CUSTOM_ATRIA_1_API_KEY") or os.getenv("MEP_LLM_API_KEY", "")
 LLM_BASE_URL = os.getenv("MEP_LLM_BASE_URL", "https://api.atria-asi.ai/v1")
 LLM_MODEL = os.getenv("MEP_LLM_MODEL", "Atria-Dawn-Preview")
@@ -418,15 +422,18 @@ def build_telegram_message(issue, news):
     lines.append("━" * 18)
     lines.append("")
     lines.append("MEP Newsletter — نشرة هندسية يومية")
+    lines.append(f"🌐 اقرأ النشرة كاملة: {WEB_URL}")
     lines.append("للاشتراك أو الاقتراحات: تواصل معنا")
     return "\n".join(lines)
 
 
 # ---------------------------------------------------------------- web edition
 CSS = """
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: 'Segoe UI', 'Tahoma', sans-serif;
+  font-family: 'Cairo', 'Segoe UI', 'Tahoma', sans-serif;
   background: #f4f6f8;
   color: #1a202c;
   direction: rtl;
@@ -442,6 +449,8 @@ header h1 { font-size: 26px; margin-bottom: 6px; }
 header .sub { opacity: .9; font-size: 14px; }
 header .issue { display: inline-block; margin-top: 12px; background: rgba(255,255,255,.16);
   padding: 4px 14px; border-radius: 999px; font-size: 13px; }
+header .links { margin-top: 14px; font-size: 13px; opacity: .95; }
+header .links a { color: #fff; text-decoration: underline; }
 .intro { background: #fff; border-radius: 12px; padding: 16px 18px; margin-bottom: 22px;
   color: #4a5568; font-size: 15px; border: 1px solid #e2e8f0; }
 section { margin-bottom: 30px; }
@@ -461,6 +470,12 @@ footer a { color: #2a6f97; }
 @media (max-width: 640px) { header h1 { font-size: 21px; } .card { padding: 14px; } }
 """
 
+GC_SNIPPET = """
+<!-- GoatCounter analytics -->
+<script data-goatcounter="https://{code}.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+"""
+
 
 def build_web_page(issue, news, archive_links=None):
     today = datetime.now(timezone(timedelta(hours=3)))
@@ -475,6 +490,9 @@ def build_web_page(issue, news, archive_links=None):
     parts.append(f"<title>MEP Newsletter — العدد {issue}</title>")
     parts.append(f"<style>{CSS}</style>")
     parts.append("</head>")
+    if GOATCOUNTER_CODE:
+        gc = GC_SNIPPET.replace("{code}", GOATCOUNTER_CODE)
+        parts.insert(-1, gc)
     parts.append("<body>")
     parts.append('<div class="wrap">')
 
