@@ -58,14 +58,31 @@ STATE_FILE = os.path.join(
 
 
 def next_issue():
+    """Issue number = highest archived issue + 1.
+
+    On CI there is no state file, so the archive on disk (committed by
+    previous runs) is the durable source of truth. A missing/empty archive
+    means this is issue #1.
+    """
     n = 0
     try:
-        if os.path.exists(STATE_FILE):
-            with open(STATE_FILE, encoding="utf-8") as f:
-                n = int(json.load(f).get("issue", 0))
+        if os.path.isdir(ARCHIVE_DIR):
+            for fname in os.listdir(ARCHIVE_DIR):
+                m = ARCHIVE_FILE_RE.match(fname)
+                if m:
+                    n = max(n, int(m.group(1)))
     except Exception:
         n = 0
     n += 1
+
+    # local state file still kept in sync for the standalone desktop script
+    try:
+        if os.path.exists(STATE_FILE):
+            with open(STATE_FILE, encoding="utf-8") as f:
+                local_n = int(json.load(f).get("issue", 0))
+            n = max(n, local_n + 1)
+    except Exception:
+        pass
     try:
         d = os.path.dirname(STATE_FILE)
         if not os.path.isdir(d):
@@ -84,6 +101,8 @@ SECTIONS = [
     ("plumb", "🚰 الأعمال الصحية", "AI water management OR leak detection OR smart plumbing"),
     ("medical", "🏥 الغازات الطبية", "AI medical gas OR hospital pipeline monitoring OR healthcare HVAC"),
 ]
+
+ARCHIVE_FILE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}__(\d+)\.html$")
 
 DOMAIN_RE = re.compile(r"https?://([^/]+)")
 
