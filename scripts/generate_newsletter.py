@@ -266,13 +266,16 @@ def editorial_pass(raw_items):
     prompt = EDITOR_PROMPT + "\nالأخبار المرشحة:\n\n" + candidates
 
     # Ask for a compact, predictable JSON-ish stream we can count on
+    # NOTE: Atria-Dawn-Preview is a reasoning model: reasoning_tokens come out of the
+    # same max_tokens budget BEFORE content. A small budget yields finish_reason=length
+    # with content=None. Keep the budget generous.
     payload = json.dumps({
         "model": LLM_MODEL,
         "messages": [
             {"role": "system", "content": "أنت محرر تقني عربي محترف. اتبع التعليمات حرفياً."},
             {"role": "user", "content": prompt},
         ],
-        "max_tokens": 4000,
+        "max_tokens": 20000,
         "temperature": 0.2,
     }).encode("utf-8")
 
@@ -295,9 +298,13 @@ def editorial_pass(raw_items):
             # tolerate providers that return content in different shapes
             choice = resp.get("choices", [{}])[0]
             raw = (choice.get("message") or {}).get("content")
+            # Atria is a reasoning model: if content is empty but reasoning exists,
+            # the reasoning budget ate the whole max_tokens. Retry with more.
             if not raw:
-                raw = (choice.get("message") or {}).get("reasoning_content")
-            if not raw:
+                rc = (choice.get("message") or {}).get("reasoning_content")
+                if rc:
+                    print(f"[mep] LLM produced {len(rc)} reasoning chars but no content "
+                          f"(finish={choice.get('finish_reason')}); retrying", file=sys.stderr, flush=True)
                 raise ValueError("empty content from LLM")
             text = raw.strip()
             last_err = None
