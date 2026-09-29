@@ -34,6 +34,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           MEP_LLM_API_KEY: ${{ secrets.MEP_LLM_API_KEY }}
+          GOATCOUNTER_CODE: ${{ secrets.GOATCOUNTER_CODE }}
         run: python scripts/generate_newsletter.py
 
       - name: Upload Pages artifact
