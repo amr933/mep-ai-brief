@@ -247,7 +247,7 @@ def fetch_raw_items():
 
 
 # ---------------------------------------------------------------- editorial LLM
-EDITOR_PROMPT = """أنت محرّر هندسي محترف لنشرة "MEP Newsletter" العربية اليومية المتخصصة في تطبيقات الذكاء الاصطناعي في هندسة التكييف (HVAC) ومكافحة الحريق والأعمال الصحية والغازات الطبية.
+EDITOR_PROMPT = """أنت محرّر هندسي محترف لنشرة "MEP Daily" العربية اليومية المتخصصة في تطبيقات الذكاء الاصطناعي في هندسة التكييف (HVAC) ومكافحة الحريق والأعمال الصحية والغازات الطبية.
 
 ستصلك مجموعة من الأخبار المرشحة مقسمة على 4 أقسام. لكل قسم، اكتب بطاقة خبر واحدة لكل عنوان مرشح.
 
@@ -580,7 +580,7 @@ def build_web_page(issue, news, archive_links=None):
     parts.append("<head>")
     parts.append('<meta charset="utf-8">')
     parts.append('<meta name="viewport" content="width=device-width, initial-scale=1">')
-    parts.append(f"<title>MEP Newsletter — العدد {issue}</title>")
+    parts.append(f"<title>MEP Daily — العدد {issue}</title>")
     parts.append(f"<style>{CSS}</style>")
     parts.append("</head>")
     if GOATCOUNTER_CODE:
