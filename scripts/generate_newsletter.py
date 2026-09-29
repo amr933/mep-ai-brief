@@ -14,6 +14,7 @@ import re
 import time
 import subprocess
 import urllib.request
+import urllib.parse
 from datetime import datetime, timezone, timedelta
 
 
@@ -33,8 +34,8 @@ def _load_env_key(name):
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN") or "8811437259:AAEkfiT-v3alMzM4H5jL_er9tGsU26wruOM"
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID") or "7758983309"
-LLM_API_KEY = _load_env_key("HERMES_CUSTOM_ATRIA_1_API_KEY")
-LLM_BASE_URL = "https://api.atria-asi.ai/v1"
+LLM_API_KEY = _load_env_key("HERMES_CUSTOM_ATRIA_1_API_KEY") or os.getenv("MEP_LLM_API_KEY", "")
+LLM_BASE_URL = os.getenv("MEP_LLM_BASE_URL", "https://api.atria-asi.ai/v1")
 LLM_MODEL = os.getenv("MEP_LLM_MODEL", "Atria-Dawn-Preview")
 
 try:
@@ -74,13 +75,61 @@ def next_issue():
 
 # ---------------------------------------------------------------- search layer
 SECTIONS = [
-    ("hvac", "❄️ التكييف والتهوية", "artificial intelligence HVAC systems energy efficiency news 2026"),
-    ("fire", "🔥 مكافحة الحريق", "artificial intelligence fire protection detection suppression news 2026"),
-    ("plumb", "🚰 الأعمال الصحية", "artificial intelligence plumbing smart water management leak detection news 2026"),
-    ("medical", "🏥 الغازات الطبية", "artificial intelligence medical gas systems hospital pipeline monitoring news 2026"),
+    ("hvac", "❄️ التكييف والتهوية", "AI HVAC OR \"artificial intelligence\" air conditioning heating ventilation"),
+    ("fire", "🔥 مكافحة الحريق", "AI fire detection OR fire suppression OR firefighting technology"),
+    ("plumb", "🚰 الأعمال الصحية", "AI water management OR leak detection OR smart plumbing"),
+    ("medical", "🏥 الغازات الطبية", "AI medical gas OR hospital pipeline monitoring OR healthcare HVAC"),
 ]
 
 DOMAIN_RE = re.compile(r"https?://([^/]+)")
+
+
+def _google_news_search(query, limit=8, max_days_old=45):
+    """Google News RSS feed — no API key needed, works on any server."""
+    import html as _html
+    import time as _time
+    q = urllib.parse.quote_plus(query)
+    url = f"https://news.google.com/rss/search?q={q}&hl=en&gl=US&ceid=US:en"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            body = r.read().decode("utf-8", errors="ignore")
+    except Exception as e:
+        print(f"[search] google news failed: {e}", file=sys.stderr)
+        return []
+
+    items = re.findall(r"<item>(.*?)</item>", body, re.S)
+    out = []
+    now = _time.time()
+    for it in items:
+        if len(out) >= limit:
+            break
+        t = re.search(r"<title>(.*?)</title>", it, re.S)
+        l = re.search(r"<link>(.*?)</link>", it, re.S)
+        d = re.search(r"<pubDate>(.*?)</pubDate>", it, re.S)
+        s = re.search(r"<description>(.*?)</description>", it, re.S)
+        if not (t and l):
+            continue
+        title = _html.unescape(t.group(1)).strip()
+        link = _html.unescape(l.group(1)).strip()
+        # strip the trailing " - Source Name" from Google News titles
+        if " - " in title:
+            title = re.sub(r"\s+-\s+[^-]+$", "", title).strip()
+        desc = _html.unescape(s.group(1)).strip() if s else ""
+        if desc.startswith("<"):
+            desc = re.sub(r"<[^>]+>", " ", desc).strip()
+        # age filter
+        if d:
+            try:
+                dt = datetime.strptime(d.group(1).strip(), "%a, %d %b %Y %H:%M:%S %Z")
+                age_days = (now - dt.timestamp()) / 86400
+                if age_days > max_days_old:
+                    continue
+            except Exception:
+                pass
+        if title and link:
+            out.append({"title": title, "url": link, "description": desc})
+    return out
 
 
 def _ddg_search(query, limit=5):
@@ -125,11 +174,13 @@ def _ddg_search(query, limit=5):
 
 
 def web_search(query, limit=5):
-    """Search the web. Prefers the Hermes tool; falls back to DuckDuckGo HTML."""
+    """Search the web. Order: Google News RSS -> Hermes tool -> DuckDuckGo HTML."""
+    items = _google_news_search(query, limit=limit)
+    if items:
+        return items
     try:
         from hermes_tools import web_search as _ws
         res = _ws(query, limit)
-        items = []
         if isinstance(res, dict):
             items = res.get("data", {}).get("web", []) or []
         elif isinstance(res, list):
