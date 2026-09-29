@@ -553,6 +553,7 @@ footer {
   border-top: 1px solid var(--line);
 }
 footer .fbrand { color: var(--brand); font-weight: 800; font-size: 16px; margin-bottom: 4px; }
+footer .views { margin-top: 12px; font-size: 14px; color: var(--muted); }
 footer a { color: var(--brand2); text-decoration: none; }
 footer a:hover { text-decoration: underline; }
 
@@ -658,7 +659,21 @@ def build_web_page(issue, news, archive_links=None):
     parts.append("<footer>")
     parts.append('<div class="fbrand">MEP Daily</div>')
     parts.append("<div>جميع الحقوق محفوظة لـ Nexus Solutions</div>")
+    parts.append('<div class="views">عدد القرّاء حتى الآن: <span id="viewcount" style="font-weight:800;color:var(--brand)">…</span></div>')
     parts.append("</footer>")
+
+    # live visitor counter (GoatCounter .json endpoint; needs "Allow adding
+    # visitor counts" enabled in Site Settings, otherwise it 403s and shows "—")
+    parts.append("<script>")
+    parts.append("(function(){var r=new XMLHttpRequest();")
+    parts.append("r.addEventListener('load',function(){")
+    parts.append("try{var c=JSON.parse(r.responseText).count;")
+    parts.append("var el=document.getElementById('viewcount');")
+    parts.append("if(c&&el){el.textContent=c;}}catch(e){}});")
+    parts.append("r.addEventListener('error',function(){var el=document.getElementById('viewcount');if(el){el.textContent='—';}});")
+    parts.append(f"r.open('GET','https://{GOATCOUNTER_CODE}.goatcounter.com/counter/TOTAL.json');")
+    parts.append("r.send();})();")
+    parts.append("</script>")
 
     parts.append("</div>")
     parts.append("</body>")
