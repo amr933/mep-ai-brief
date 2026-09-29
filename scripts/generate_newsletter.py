@@ -202,7 +202,7 @@ def fetch_raw_items():
         except Exception as e:
             print(f"[search] {key} failed: {e}", file=sys.stderr)
             items = []
-        for it in items:
+        for i, it in enumerate(items[:6]):
             title = (it.get("title") or "").strip()
             url = (it.get("url") or "").strip()
             desc = (it.get("description") or "").strip()
@@ -210,7 +210,7 @@ def fetch_raw_items():
                 continue
             m = DOMAIN_RE.match(url)
             source = m.group(1) if m else ""
-            raw.append({"section": key, "title": title, "url": url, "desc": desc,
+            raw.append({"section": key, "title": title, "url": url, "desc": desc[:200],
                         "source": source})
     # dedupe by URL
     seen = set()
@@ -279,7 +279,7 @@ def editorial_pass(raw_items):
 
     last_err = None
     text = ""
-    for attempt in range(4):
+    for attempt in range(6):
         try:
             req = urllib.request.Request(
                 f"{LLM_BASE_URL}/chat/completions",
@@ -293,7 +293,11 @@ def editorial_pass(raw_items):
             )
             with urllib.request.urlopen(req, timeout=900) as r:
                 resp = json.load(r)
-            raw = resp["choices"][0]["message"].get("content")
+            # tolerate providers that return content in different shapes
+            choice = resp.get("choices", [{}])[0]
+            raw = (choice.get("message") or {}).get("content")
+            if not raw:
+                raw = (choice.get("message") or {}).get("reasoning_content")
             if not raw:
                 raise ValueError("empty content from LLM")
             text = raw.strip()
@@ -301,8 +305,10 @@ def editorial_pass(raw_items):
             break
         except Exception as e:
             last_err = e
-            print(f"[mep] LLM attempt {attempt+1} failed: {e}", file=sys.stderr, flush=True)
-            time.sleep(5)
+            wait = 8 * (attempt + 1)
+            print(f"[mep] LLM attempt {attempt+1} failed: {e} (retrying in {wait}s)",
+                  file=sys.stderr, flush=True)
+            time.sleep(wait)
     if last_err is not None:
         print(f"[mep] editorial LLM failed after retries: {last_err}", file=sys.stderr, flush=True)
         return []
