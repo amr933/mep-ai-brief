@@ -408,41 +408,19 @@ def esc_html(s):
 
 
 def build_telegram_message(issue, news):
+    """Telegram = link-only: a short pointer to today's web edition.
+
+    The full newsletter lives on the website; Telegram only announces it.
+    """
     today = datetime.now(timezone(timedelta(hours=3)))
     lines = []
-    lines.append("📡 *MEP Newsletter*")
+    lines.append("📡 *MEP Daily*")
     lines.append(f"العدد رقم {issue} • {today.strftime('%Y-%m-%d')}")
     lines.append("")
-    lines.append("ملخص يومي لأحدث تطبيقات الذكاء الاصطناعي في هندسة التكييف ومكافحة الحريق والأعمال الصحية والغازات الطبية — مختاراً ومراجعاً هندسياً.")
+    lines.append("كل ما هو جديد في عالم الـ MEP — موجز يومي لأحدث الأخبار والتطبيقات في التكييف ومكافحة الحريق والأعمال الصحية والغازات الطبية.")
     lines.append("")
-    lines.append("━" * 18)
-
-    for key, label, _ in SECTIONS:
-        section_items = [n for n in news if n.get("القسم", "").strip() == label]
-        if not section_items:
-            continue
-        lines.append("")
-        lines.append(f"*{label}*")
-        lines.append("")
-        for n in section_items:
-            title = esc_md(n.get("العنوان", "بدون عنوان"))
-            summary = esc_md(n.get("الملخص", ""))
-            why = esc_md(n.get("لماذا يهمك", ""))
-            link = (n.get("الرابط") or "").strip()
-            lines.append(f"▸ *{title}*")
-            if summary:
-                lines.append(summary)
-            if why:
-                lines.append(f"_💡 لماذا يهمك: {why}_")
-            if link:
-                lines.append(f"[🔗 المصدر]({link})")
-            lines.append("")
-
-    lines.append("━" * 18)
-    lines.append("")
-    lines.append("MEP Newsletter — نشرة هندسية يومية")
-    lines.append(f"🌐 اقرأ النشرة كاملة: {WEB_URL}")
-    lines.append("للاشتراك أو الاقتراحات: تواصل معنا")
+    lines.append(f"يمكنك الاطلاع على العدد {issue} من هنا:")
+    lines.append(WEB_URL)
     return "\n".join(lines)
 
 
@@ -478,18 +456,18 @@ body {
   padding: 40px 20px 34px;
   border-bottom: 5px solid var(--accent);
 }
-.hero-in { max-width: 820px; margin: 0 auto; }
+.hero-in { max-width: 820px; margin: 0 auto; text-align: center; }
 .hero .brandline {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 15px; letter-spacing: 1px; opacity: .95; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 15px; letter-spacing: 2px; opacity: .95; font-weight: 700;
 }
 .hero .brandline .dot {
   width: 10px; height: 10px; border-radius: 50%; background: var(--accent);
   box-shadow: 0 0 12px rgba(228,176,74,.9);
 }
-.hero h1 { font-size: 30px; margin: 10px 0 6px; font-weight: 900; }
-.hero .sub { opacity: .92; font-size: 15px; max-width: 640px; }
-.hero .chips { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+.hero h1 { font-size: 32px; margin: 12px 0 8px; font-weight: 900; }
+.hero .sub { opacity: .92; font-size: 15px; max-width: 600px; margin: 0 auto; }
+.hero .chips { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .hero .chip {
   background: rgba(255,255,255,.14);
   border: 1px solid rgba(255,255,255,.28);
@@ -569,19 +547,14 @@ section { margin-bottom: 34px; }
 footer {
   text-align: center;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   margin-top: 46px;
   padding-top: 22px;
   border-top: 1px solid var(--line);
 }
-footer .views {
-  margin-top: 14px;
-  font-size: 14px;
-  color: var(--muted);
-}
+footer .fbrand { color: var(--brand); font-weight: 800; font-size: 16px; margin-bottom: 4px; }
 footer a { color: var(--brand2); text-decoration: none; }
 footer a:hover { text-decoration: underline; }
-footer .fbrand { color: var(--brand); font-weight: 800; }
 
 @media (max-width: 640px) {
   .hero h1 { font-size: 23px; }
@@ -618,9 +591,9 @@ def build_web_page(issue, news, archive_links=None):
     # ---- hero band (full-width, outside .wrap)
     parts.append('<div class="hero">')
     parts.append('<div class="hero-in">')
-    parts.append('<div class="brandline"><span class="dot"></span>MEP NEWSLETTER</div>')
-    parts.append("<h1>الذكاء الاصطناعي في هندسة الـ MEP</h1>")
-    parts.append('<div class="sub">ملخص يومي لأحدث الأخبار والتطبيقات في التكييف والتهوية ومكافحة الحريق والأعمال الصحية والغازات الطبية — مُحرَّر هندسياً باللغة العربية.</div>')
+    parts.append('<div class="brandline"><span class="dot"></span>MEP DAILY</div>')
+    parts.append("<h1>كل ما هو جديد في عالم الـ MEP</h1>")
+    parts.append('<div class="sub">موجز يومي لأحدث الأخبار والتطبيقات في التكييف والتهوية ومكافحة الحريق والأعمال الصحية والغازات الطبية — مُحرَّر هندسياً باللغة العربية.</div>')
     parts.append('<div class="chips">')
     parts.append('<span class="chip">❄️ التكييف</span>')
     parts.append('<span class="chip">🔥 الحريق</span>')
@@ -683,24 +656,9 @@ def build_web_page(issue, news, archive_links=None):
         parts.append("</section>")
 
     parts.append("<footer>")
-    parts.append('<div class="fbrand">MEP Newsletter</div>')
-    parts.append("<div>نشرة هندسية يومية — تصلك كل صباح الساعة 8 بتوقيت مصر</div>")
-    parts.append('<div class="views">عدد القرّاء حتى الآن: <span id="viewcount" style="font-weight:800;color:var(--brand)">…</span></div>')
-    parts.append('<div style="margin-top:8px"><a href="https://github.com/amr933/mep-ai-brief">المشروع على GitHub</a></div>')
+    parts.append('<div class="fbrand">MEP Daily</div>')
+    parts.append("<div>جميع الحقوق محفوظة لـ Nexus Solutions</div>")
     parts.append("</footer>")
-
-    # live visitor counter (GoatCounter .json endpoint; needs "Allow adding
-    # visitor counts" enabled in Settings, otherwise it 403s silently)
-    parts.append("<script>")
-    parts.append("(function(){var r=new XMLHttpRequest();")
-    parts.append("r.addEventListener('load',function(){")
-    parts.append("try{var c=JSON.parse(r.responseText).count;")
-    parts.append("var el=document.getElementById('viewcount');")
-    parts.append("if(c&&el){el.textContent=c;}}catch(e){}});")
-    parts.append("r.addEventListener('error',function(){var el=document.getElementById('viewcount');if(el){el.textContent='—';}});")
-    parts.append(f"r.open('GET','https://{GOATCOUNTER_CODE}.goatcounter.com/counter/TOTAL.json');")
-    parts.append("r.send();})();")
-    parts.append("</script>")
 
     parts.append("</div>")
     parts.append("</body>")
