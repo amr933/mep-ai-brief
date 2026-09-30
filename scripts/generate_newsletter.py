@@ -671,7 +671,7 @@ def build_web_page(issue, news, archive_links=None):
     parts.append("var el=document.getElementById('viewcount');")
     parts.append("if(c&&el){el.textContent=c;}}catch(e){}});")
     parts.append("r.addEventListener('error',function(){var el=document.getElementById('viewcount');if(el){el.textContent='—';}});")
-    parts.append(f"r.open('GET','https://{GOATCOUNTER_CODE}.goatcounter.com/counter/TOTAL.json');")
+    parts.append("r.open('GET','https://" + GOATCOUNTER_CODE + ".goatcounter.com/counter/TOTAL.json?start=2026-01-01&_=' + Date.now());")
     parts.append("r.send();})();")
     parts.append("</script>")
 
