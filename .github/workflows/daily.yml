@@ -2,8 +2,9 @@ name: Daily MEP Newsletter
 
 on:
   schedule:
-    # 05:00 UTC = 08:00 Egypt (UTC+3)
-    - cron: '0 5 * * *'
+    # 04:30 UTC = 07:30 Egypt (UTC+3). GitHub cron runs up to ~30 min late
+    # under load, so we fire early to land in the 08:00-08:30 window.
+    - cron: '30 4 * * *'
   workflow_dispatch:  # allow manual runs from the Actions tab
 
 # Let the workflow commit the generated pages back to the repo
