@@ -371,11 +371,23 @@ SECTION_BY_KEY = {
 }
 
 
+def _looks_english(s):
+    """True if the string is mostly Latin letters (no Arabic)."""
+    if not s:
+        return False
+    letters = [c for c in s if c.isalpha()]
+    if not letters:
+        return False
+    arabic = sum(1 for c in letters if "\u0600" <= c <= "\u06ff")
+    return arabic < len(letters) * 0.3
+
+
 def fallback_news(raw):
     """Build a publishable issue from raw search hits when the LLM is down.
 
     Keeps one item per section (dedup by section), with a short mechanical
-    summary so the newsletter is never empty.
+    summary so the newsletter is never empty. Titles/labels are Arabic so the
+    issue still reads as a proper Arabic newsletter.
     """
     out = []
     for key, label, _ in SECTIONS:
@@ -387,6 +399,10 @@ def fallback_news(raw):
         it = picked[0]
         title = it.get("title", "").strip()
         desc = (it.get("desc") or "").strip()
+        # best-effort Arabic title: use description's first sentence if the
+        # title itself is English; otherwise keep the (translated-looking) title
+        if desc and _looks_english(title):
+            title = desc.split(".")[0].strip()[:140] or title
         summary = desc if desc else title
         if len(summary) > 220:
             summary = summary[:217].rsplit(" ", 1)[0] + "…"
