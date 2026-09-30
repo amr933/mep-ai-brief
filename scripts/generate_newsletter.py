@@ -415,6 +415,9 @@ def fallback_news(raw):
         src = it.get("source") or ""
         src_clean = src.replace("www.", "").split(".")[0]
         ar_title = f"{label[1:].strip()}: {src_clean} ينشر تطبيقاً جديداً بالذكاء الاصطناعي"
+        if not src_clean or src_clean.lower() in ("news", "rss"):
+            # No usable domain — use a generic but still-Arabic headline
+            ar_title = f"جديد في {label[1:].strip()} بالذكاء الاصطناعي"
 
         # summary: use the description when present; otherwise the headline
         summary = desc if desc else title
