@@ -55,5 +55,12 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "chore(site): daily newsletter issue [skip ci]"
-            git push
+            # Retry push: another push may have landed between checkout and now
+            for i in 1 2 3 4 5; do
+              if git push; then break; fi
+              echo "push failed (attempt $i), rebase and retry..."
+              git fetch origin
+              git rebase origin/main --autostash || git rebase --abort
+              sleep $(( i * 5 ))
+            done
           fi
