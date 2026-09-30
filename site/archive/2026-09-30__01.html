@@ -131,8 +131,8 @@ footer {
   padding-top: 22px;
   border-top: 1px solid var(--line);
 }
-footer .fbrand { color: var(--brand); font-weight: 800; font-size: 16px; margin-bottom: 4px; }
 footer .views { margin-top: 12px; font-size: 14px; color: var(--muted); }
+footer .fbrand { color: var(--brand); font-weight: 800; font-size: 16px; margin-bottom: 4px; }
 footer a { color: var(--brand2); text-decoration: none; }
 footer a:hover { text-decoration: underline; }
 
@@ -174,10 +174,10 @@ footer a:hover { text-decoration: underline; }
 <div class="rule"></div>
 </div>
 <div class="card">
-<h3>النشرة تستعد للانطلاق</h3>
-<p>نعمل على تجهيز أول عدد رسمي من MEP Daily.</p>
-<div class="why">💡 <b>لماذا يهمك:</b> تابعنا يومياً الساعة 8 صباحاً.</div>
-<div class="source"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1b7a9e" stroke-width="2.2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7"/></svg><a href="https://amr933.github.io/mep-ai-brief/" target="_blank" rel="noopener">amr933.github.io</a></div>
+<h3>خبر تجريبي</h3>
+<p>ملخص</p>
+<div class="why">💡 <b>لماذا يهمك:</b> سبب</div>
+<div class="source"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1b7a9e" stroke-width="2.2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7"/></svg><a href="https://example.com/a" target="_blank" rel="noopener">example.com</a></div>
 </div>
 </section>
 <section>
@@ -193,7 +193,18 @@ footer a:hover { text-decoration: underline; }
 <footer>
 <div class="fbrand">MEP Daily</div>
 <div>جميع الحقوق محفوظة لـ Nexus Solutions</div>
+<div class="views">عدد القرّاء حتى الآن: <span id="viewcount" style="font-weight:800;color:var(--brand)">…</span></div>
 </footer>
+<script>
+(function(){var r=new XMLHttpRequest();
+r.addEventListener('load',function(){
+try{var c=JSON.parse(r.responseText).count_unique || JSON.parse(r.responseText).count;
+var el=document.getElementById('viewcount');
+if(c&&el){el.textContent=c;}}catch(e){}});
+r.addEventListener('error',function(){var el=document.getElementById('viewcount');if(el){el.textContent='—';}});
+r.open('GET','https://mepnewsletter.goatcounter.com/counter/TOTAL.json?start=2026-01-01&_t=' + Date.now());
+r.send();})();
+</script>
 </div>
 </body>
 </html>

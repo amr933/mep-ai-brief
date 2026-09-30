@@ -360,6 +360,44 @@ def editorial_pass(raw_items):
     return items
 
 
+# ---------------------------------------------------------------- fallback news
+SECTION_BY_KEY = {
+    "hvac": "❄️ التكييف والتهوية",
+    "fire": "🔥 مكافحة الحريق",
+    "plumb": "🚰 الأعمال الصحية",
+    "medical": "🏥 الغازات الطبية",
+}
+
+
+def fallback_news(raw):
+    """Build a publishable issue from raw search hits when the LLM is down.
+
+    Keeps one item per section (dedup by section), with a short mechanical
+    summary so the newsletter is never empty.
+    """
+    out = []
+    for key, label, _ in SECTIONS:
+        picked = [it for it in raw if it.get("section") == key]
+        if not picked:
+            continue
+        # prefer items with a description
+        picked.sort(key=lambda it: len(it.get("desc") or ""), reverse=True)
+        it = picked[0]
+        title = it.get("title", "").strip()
+        desc = (it.get("desc") or "").strip()
+        summary = desc if desc else title
+        if len(summary) > 220:
+            summary = summary[:217].rsplit(" ", 1)[0] + "…"
+        out.append({
+            "القسم": label,
+            "العنوان": title,
+            "الملخص": summary,
+            "لماذا يهمك": "خبر جديد في تخصصك — راجع المصدر الأصلي للتفاصيل.",
+            "الرابط": it.get("url", ""),
+        })
+    return out
+
+
 # ---------------------------------------------------------------- telegram
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -552,8 +590,8 @@ footer {
   padding-top: 22px;
   border-top: 1px solid var(--line);
 }
-footer .fbrand { color: var(--brand); font-weight: 800; font-size: 16px; margin-bottom: 4px; }
 footer .views { margin-top: 12px; font-size: 14px; color: var(--muted); }
+footer .fbrand { color: var(--brand); font-weight: 800; font-size: 16px; margin-bottom: 4px; }
 footer a { color: var(--brand2); text-decoration: none; }
 footer a:hover { text-decoration: underline; }
 
@@ -659,7 +697,24 @@ def build_web_page(issue, news, archive_links=None):
     parts.append("<footer>")
     parts.append('<div class="fbrand">MEP Daily</div>')
     parts.append("<div>جميع الحقوق محفوظة لـ Nexus Solutions</div>")
+    if GOATCOUNTER_CODE:
+        parts.append('<div class="views">عدد القرّاء حتى الآن: <span id="viewcount" '
+                     'style="font-weight:800;color:var(--brand)">…</span></div>')
     parts.append("</footer>")
+
+    if GOATCOUNTER_CODE:
+        # live visitor counter (GoatCounter .json). Timestamp defeats any
+        # intermediate caching so the number never sits stale.
+        parts.append("<script>")
+        parts.append("(function(){var r=new XMLHttpRequest();")
+        parts.append("r.addEventListener('load',function(){")
+        parts.append("try{var c=JSON.parse(r.responseText).count_unique || JSON.parse(r.responseText).count;")
+        parts.append("var el=document.getElementById('viewcount');")
+        parts.append("if(c&&el){el.textContent=c;}}catch(e){}});")
+        parts.append("r.addEventListener('error',function(){var el=document.getElementById('viewcount');if(el){el.textContent='—';}});")
+        parts.append("r.open('GET','https://" + GOATCOUNTER_CODE + ".goatcounter.com/counter/TOTAL.json?start=2026-01-01&_t=' + Date.now());")
+        parts.append("r.send();})();")
+        parts.append("</script>")
 
     parts.append("</div>")
     parts.append("</body>")
@@ -726,7 +781,14 @@ def main():
     news = editorial_pass(raw)
     print(f"[mep] {len(news)} edited items", flush=True)
     if not news:
-        print("[mep] editorial pass returned nothing", file=sys.stderr, flush=True)
+        # The LLM is down or rate-limited; never publish an empty newsletter.
+        # Fall back to a light mechanical edit of the raw candidates so the
+        # issue still goes out on time.
+        print("[mep] editorial pass returned nothing — using raw fallback", file=sys.stderr, flush=True)
+        news = fallback_news(raw)
+        print(f"[mep] {len(news)} fallback items", flush=True)
+    if not news:
+        print("[mep] no usable news at all", file=sys.stderr, flush=True)
         return
 
     # 1) web edition (always, even if Telegram fails)
