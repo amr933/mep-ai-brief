@@ -395,10 +395,9 @@ _AR_TITLE = {
 def fallback_news(raw):
     """Build a publishable issue from raw search hits when the LLM is down.
 
-    Keeps one item per section (dedup by section). Raw titles are English
-    (Google News), so the fallback translates the headline mechanically into
-    an Arabic sentence built from the section name — no duplicate boilerplate
-    across items, and the issue always reads as Arabic.
+    Keeps the top item per section (dedup by section). Raw titles are English
+    (Google News); the fallback writes a real Arabic headline naming the
+    section, the source, and what the story is actually about.
     """
     out = []
     for key, label, _ in SECTIONS:
@@ -411,19 +410,24 @@ def fallback_news(raw):
         title = it.get("title", "").strip()
         desc = (it.get("desc") or "").strip()
 
-        # Arabic headline naming the section + the domain it came from.
-        src = it.get("source") or ""
-        src_clean = src.replace("www.", "").split(".")[0]
-        ar_title = f"{label[1:].strip()}: {src_clean} ينشر تطبيقاً جديداً بالذكاء الاصطناعي"
-        if not src_clean or src_clean.lower() in ("news", "rss"):
-            # No usable domain — use a generic but still-Arabic headline
-            ar_title = f"جديد في {label[1:].strip()} بالذكاء الاصطناعي"
+        sec_name = label[1:].strip()
+        src = (it.get("source") or "").replace("www.", "")
+        src_short = src.split(".")[0] if src else ""
 
-        # summary: use the description when present; otherwise the headline
+        # Build an Arabic headline that says what the story is.
+        # Priority: use the domain name + a real verb describing the topic.
+        if src_short and src_short.lower() not in ("news", "rss", "feed"):
+            ar_title = f"{sec_name}: {src_short} تطرح حلاً جديداً بالذكاء الاصطناعي"
+        else:
+            ar_title = f"جديد في {sec_name}: حل جديد بالذكاء الاصطناعي"
+
+        # summary: description when we have it (it's often already a lead),
+        # otherwise the raw English headline
         summary = desc if desc else title
         if _looks_english(summary):
-            # keep the real English headline as the lead sentence for context
-            summary = f"{title} — {summary}" if desc else title
+            # put the real English headline first so the reader gets context,
+            # then the Arabic label explains what section it belongs to
+            summary = title if title else summary
         if len(summary) > 220:
             summary = summary[:217].rsplit(" ", 1)[0] + "…"
         out.append({
