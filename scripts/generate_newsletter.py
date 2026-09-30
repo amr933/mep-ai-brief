@@ -384,12 +384,20 @@ def _looks_english(s):
     return arabic < len(letters) * 0.3
 
 
+_AR_TITLE = {
+    "hvac": "تطبيق جديد للذكاء الاصطناعي في التكييف والتهوية",
+    "fire": "تطبيق جديد للذكاء الاصطناعي في مكافحة الحريق",
+    "plumb": "تطبيق جديد للذكاء الاصطناعي في الأعمال الصحية",
+    "medical": "تطبيق جديد للذكاء الاصطناعي في الغازات الطبية",
+}
+
+
 def fallback_news(raw):
     """Build a publishable issue from raw search hits when the LLM is down.
 
-    Keeps one item per section (dedup by section), with a short mechanical
-    summary so the newsletter is never empty. Titles/labels are Arabic so the
-    issue still reads as a proper Arabic newsletter.
+    Keeps one item per section (dedup by section). The raw titles are English
+    (Google News), so we emit a fixed Arabic title per section and keep the
+    real headline as the summary — the issue always reads as Arabic.
     """
     out = []
     for key, label, _ in SECTIONS:
@@ -401,16 +409,17 @@ def fallback_news(raw):
         it = picked[0]
         title = it.get("title", "").strip()
         desc = (it.get("desc") or "").strip()
-        # best-effort Arabic title: use description's first sentence if the
-        # title itself is English; otherwise keep the (translated-looking) title
-        if desc and _looks_english(title):
-            title = desc.split(".")[0].strip()[:140] or title
+        # Arabic headline; the English headline becomes the lead sentence
+        ar_title = _AR_TITLE.get(key, "خبر جديد")
         summary = desc if desc else title
+        if _looks_english(summary):
+            # lead with the Arabic label then the English headline
+            summary = f"{ar_title} — {summary}"
         if len(summary) > 220:
             summary = summary[:217].rsplit(" ", 1)[0] + "…"
         out.append({
             "القسم": label,
-            "العنوان": title,
+            "العنوان": ar_title,
             "الملخص": summary,
             "لماذا يهمك": "خبر جديد في تخصصك — راجع المصدر الأصلي للتفاصيل.",
             "الرابط": it.get("url", ""),
