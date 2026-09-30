@@ -318,7 +318,7 @@ def editorial_pass(raw_items):
                 },
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=900) as r:
+            with urllib.request.urlopen(req, timeout=300) as r:
                 resp = json.load(r)
             # tolerate providers that return content in different shapes
             choice = resp.get("choices", [{}])[0]
@@ -337,6 +337,8 @@ def editorial_pass(raw_items):
         except Exception as e:
             last_err = e
             wait = 8 * (attempt + 1)
+            # Cap retries so a fully-down LLM can't stall the daily schedule.
+            # 6 attempts × (300s timeout + backoff) is already ~35 min worst case.
             print(f"[mep] LLM attempt {attempt+1} failed: {e} (retrying in {wait}s)",
                   file=sys.stderr, flush=True)
             time.sleep(wait)
