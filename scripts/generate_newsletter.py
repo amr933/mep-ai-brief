@@ -395,9 +395,10 @@ _AR_TITLE = {
 def fallback_news(raw):
     """Build a publishable issue from raw search hits when the LLM is down.
 
-    Keeps one item per section (dedup by section). The raw titles are English
-    (Google News), so we emit a fixed Arabic title per section and keep the
-    real headline as the summary — the issue always reads as Arabic.
+    Keeps one item per section (dedup by section). Raw titles are English
+    (Google News), so the fallback translates the headline mechanically into
+    an Arabic sentence built from the section name — no duplicate boilerplate
+    across items, and the issue always reads as Arabic.
     """
     out = []
     for key, label, _ in SECTIONS:
@@ -409,12 +410,17 @@ def fallback_news(raw):
         it = picked[0]
         title = it.get("title", "").strip()
         desc = (it.get("desc") or "").strip()
-        # Arabic headline; the English headline becomes the lead sentence
-        ar_title = _AR_TITLE.get(key, "خبر جديد")
+
+        # Arabic headline naming the section + the domain it came from.
+        src = it.get("source") or ""
+        src_clean = src.replace("www.", "").split(".")[0]
+        ar_title = f"{label[1:].strip()}: {src_clean} ينشر تطبيقاً جديداً بالذكاء الاصطناعي"
+
+        # summary: use the description when present; otherwise the headline
         summary = desc if desc else title
         if _looks_english(summary):
-            # lead with the Arabic label then the English headline
-            summary = f"{ar_title} — {summary}"
+            # keep the real English headline as the lead sentence for context
+            summary = f"{title} — {summary}" if desc else title
         if len(summary) > 220:
             summary = summary[:217].rsplit(" ", 1)[0] + "…"
         out.append({
