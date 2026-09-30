@@ -410,16 +410,28 @@ def fallback_news(raw):
         title = it.get("title", "").strip()
         desc = (it.get("desc") or "").strip()
 
-        sec_name = label[1:].strip()
+        sec_name = label.replace("❄️", "").replace("🔥", "").replace("🚰", "").replace("🏥", "").strip()
         src = (it.get("source") or "").replace("www.", "")
         src_short = src.split(".")[0] if src else ""
 
-        # Build an Arabic headline that says what the story is.
-        # Priority: use the domain name + a real verb describing the topic.
-        if src_short and src_short.lower() not in ("news", "rss", "feed"):
+        # Google News items come from news.google.com — the real publisher is
+        # often named inside the title itself. Prefer it when available.
+        publisher = ""
+        for tok in title.replace(" | ", "|").replace(" - ", "|").split("|"):
+            tok = tok.strip()
+            if tok and not _looks_english(tok + " ا"):
+                publisher = tok
+                break
+        # English publishers appear as the last " - " chunk too
+        if not publisher and "|" in title:
+            publisher = title.split("|")[-1].strip()
+
+        if publisher:
+            ar_title = f"{sec_name}: {publisher} — جديد في عالم الـ MEP"
+        elif src_short and src_short.lower() not in ("news", "rss", "feed"):
             ar_title = f"{sec_name}: {src_short} تطرح حلاً جديداً بالذكاء الاصطناعي"
         else:
-            ar_title = f"جديد في {sec_name}: حل جديد بالذكاء الاصطناعي"
+            ar_title = f"جديد في {sec_name}: تطبيق جديد للذكاء الاصطناعي"
 
         # summary: description when we have it (it's often already a lead),
         # otherwise the raw English headline
